@@ -1,0 +1,48 @@
+{
+  "name": "tinyparse",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "module": "index.mjs",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "require": {
+        "types": "./index.d.ts",
+        "default": "./index.js"
+      },
+      "import": {
+        "types": "./index.d.mts",
+        "default": "./index.mjs"
+      }
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kossnocorp/tinyparse.git"
+  },
+  "keywords": [
+    "state"
+  ],
+  "author": "Sasha Koss <koss@nocorp.me>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kossnocorp/tinyparse/issues"
+  },
+  "homepage": "https://github.com/kossnocorp/tinyparse#readme",
+  "devDependencies": {
+    "@babel/cli": "^7.24.6",
+    "@babel/core": "^7.24.6",
+    "@babel/plugin-transform-modules-commonjs": "^7.24.6",
+    "@babel/preset-env": "^7.24.6",
+    "@babel/preset-typescript": "^7.24.6",
+    "@parcel/watcher": "^2.4.1",
+    "@swc/core": "^1.5.7",
+    "babel-plugin-add-import-extension": "^1.6.0",
+    "bytes-iec": "^3.1.1",
+    "glob": "^10.4.1",
+    "picocolors": "^1.0.1",
+    "typescript": "5.5.0-beta",
+    "vitest": "^1.6.0"
+  }
+}
