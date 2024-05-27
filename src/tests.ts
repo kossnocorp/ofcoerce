@@ -273,7 +273,7 @@ function createSongCoercer() {
     artist: String,
     lyrics: {
       author: $.Optional(String),
-      lines: Array(String),
+      lines: $.Array(String),
     },
   }));
 }

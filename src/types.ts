@@ -49,8 +49,17 @@ export namespace OfCoerce {
       Optional<Type>(type: Type): Optional<Type>;
 
       /**
+       * Returns array type coercer. It wraps the constructor to signal that
+       * the field is an array.
+       *
+       * @param type Array item type.
+       * @returns Array coercer.
+       */
+      Array<Type>(type: Type): Array<Type>;
+
+      /**
        * Returns union type coercer. It wraps the constructor to signal that
-       * the field is union.
+       * the field is a union.
        *
        * @param types Types to union.
        * @returns Union coercer.
@@ -75,8 +84,22 @@ export namespace OfCoerce {
     export declare const OptionalSymbol: unique symbol;
 
     /**
+     * Array coercer type. Wraps the constructor to signal that the field is
+     * an array.
+     */
+    export interface Array<Type> {
+      /** Assigned type. */
+      [ArraySymbol]: Type;
+    }
+
+    /**
+     * Symbol that helps to access the union type.
+     */
+    export declare const ArraySymbol: unique symbol;
+
+    /**
      * Union coercer type. Wraps the constructor to signal that the field is
-     * union.
+     * a union.
      */
     export interface Union<Type> {
       /** Assigned type. */
@@ -167,7 +190,7 @@ export namespace OfCoerce {
         : Shape extends number // Number
         ? NumberConstructor
         : Shape extends Array<infer Item> // Array
-        ? ToSchema<Item>[]
+        ? Core.Array<ToSchema<Item>>
         : Shape extends Record<any, any> // Object
         ? {
             [Key in keyof Shape]: true extends Utils.RequiredKey<Shape, Key>
@@ -196,7 +219,7 @@ export namespace OfCoerce {
       ? number
       : Schema extends StringConstructor // String
       ? string
-      : Schema extends Array<infer Item> // Array
+      : Schema extends Core.Array<infer Item> // Array
       ? FromSchema<Item>[]
       : Schema extends Core.Union<infer Type> // Union
       ? FromSchema<Type>

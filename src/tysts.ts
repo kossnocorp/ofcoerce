@@ -167,7 +167,7 @@ import { FromCoercer, coercer } from ".";
         artist: String,
         lyrics: {
           author: $.Optional(String),
-          lines: Array(String),
+          lines: $.Array(String),
         },
       }));
 
@@ -189,7 +189,7 @@ import { FromCoercer, coercer } from ".";
         artist: String,
         lyrics: {
           author: $.Optional(String),
-          lines: Array(String),
+          lines: $.Array(String),
         },
       }));
 
