@@ -8,6 +8,12 @@ This change log follows the format documented in [Keep a CHANGELOG].
 [semantic versioning]: http://semver.org/
 [keep a changelog]: http://keepachangelog.com/
 
+## v0.2.0 - 2024-05-27
+
+### Fixed
+
+- Fixed the inferred coerce function types.
+
 ## v0.1.0 - 2024-05-27
 
 Initial version

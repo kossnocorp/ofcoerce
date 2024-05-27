@@ -1,4 +1,5 @@
 import { FromCoercer, coercer } from ".";
+import { OfCoerce } from "./types";
 
 //#region Core
 {
@@ -39,7 +40,9 @@ import { FromCoercer, coercer } from ".";
     }));
 
     //! It returns coerced data
-    coerceUser(null) satisfies User;
+    const user = coerceUser(null);
+    user satisfies User;
+    user.name;
 
     //! It allows to pass schema directly
 
@@ -50,6 +53,7 @@ import { FromCoercer, coercer } from ".";
 
     const project = coerceProject(null);
     project satisfies Project;
+    project.name;
   }
 
   //! It allows to infer schema
@@ -64,7 +68,11 @@ import { FromCoercer, coercer } from ".";
     type _ = Assert<User, UserSchema>;
 
     //! It returns coerced data
-    coerceUser(null) satisfies User;
+    const user = coerceUser(null);
+    user satisfies User;
+    user.name;
+
+    // [TODo] Remove debug code vvvvvv
 
     //! It allows to pass schema directly
 
@@ -75,6 +83,7 @@ import { FromCoercer, coercer } from ".";
 
     const project = coerceProject(null);
     project satisfies Project;
+    project.name;
   }
 
   //! It allows to coerce FormData

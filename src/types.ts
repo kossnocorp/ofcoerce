@@ -17,6 +17,34 @@ export namespace OfCoerce {
     }
 
     /**
+     * Builder function that returns the schema for the defined coercer.
+     */
+    export interface Builder<Schema> {
+      /**
+       * Builds the coerce schema with helpers.
+       *
+       * @param helpers Helper methods to build the schema.
+       * @returns Coerce schema.
+       */
+      (helpers: BuilderHelpers): Schema;
+    }
+
+    /**
+     * Coercer function. It accepts any data and coerces it to the expected
+     * shape.
+     */
+    export interface Coercer<Shape> {
+      /**
+       * Coerces the data to the expected shape. It ensures that the data is
+       * correctly shaped.
+       *
+       * @param data Data to coerce.
+       * @returns Coerced data.
+       */
+      (data: unknown): Shape;
+    }
+
+    /**
      * Methods helping to build the coercer schema.
      */
     export interface BuilderHelpers {
@@ -43,6 +71,16 @@ export namespace OfCoerce {
      * Symbol that helps to access the optional type.
      */
     export declare const OptionalSymbol: unique symbol;
+
+    /**
+     * Infers type share from coercerer.
+     */
+    /**
+     * Resolves the type shape from the coercer schema.
+     */
+    export type FromCoercer<Coercer_> = Coercer_ extends Coercer<infer Schema>
+      ? Inferred.Infer<Schema>
+      : never;
   }
   //#endregion
 
@@ -61,41 +99,18 @@ export namespace OfCoerce {
        * @param builder Schema builder that returns coerce schema.
        * @returns Coercer function.
        */
-      <Shape>(builder: Builder<Shape> | CoerceSchema<Shape>): Coercer<Shape>;
+      <Shape>(
+        builder: Core.Builder<CoerceSchema<Shape>> | CoerceSchema<Shape>
+      ): Core.Coercer<Shape>;
     }
 
     /**
-     * Defined coercer function. It accepts any data and coerces it to
-     * the expected shape.
+     * Resolves the schema from the given shape.
      */
-    export interface Coercer<Shape> {
-      /**
-       * Coerces the data to the defined shape. It ensures that the data is
-       * correctly shaped.
-       *
-       * @param data Data to coerce.
-       * @returns Coerced data.
-       */
-      (data: unknown): Shape;
-    }
-
-    /**
-     * Builder function that returns the schema for the defined coercer.
-     */
-    export interface Builder<Schema> {
-      /**
-       * Builds the schema for the defined coercer.
-       *
-       * @param helpers Helper methods to build the schema.
-       * @returns Coerce schema.
-       */
-      (helpers: Core.BuilderHelpers): CoerceSchema<Schema>;
-    }
-
-    export type CoerceSchema<Schema> = {
-      [Key in keyof Schema]: true extends Utils.RequiredKey<Schema, Key>
-        ? Mapper.ToConstructor<Schema[Key]>
-        : Core.Optional<Mapper.ToConstructor<Schema[Key]>>;
+    export type CoerceSchema<Shape> = {
+      [Key in keyof Shape]: true extends Utils.RequiredKey<Shape, Key>
+        ? Mapper.ToConstructor<Shape[Key]>
+        : Core.Optional<Mapper.ToConstructor<Shape[Key]>>;
     };
   }
   //#endregion
@@ -114,47 +129,21 @@ export namespace OfCoerce {
        * @param schema Schema or schema builder.
        * @returns Coercer function.
        */
-      <Schema>(schema: Builder<Schema> | Schema): Coercer<Schema>;
-    }
-    /**
-     * Builder function that returns the coerce schema.
-     */
-    export interface Builder<Schema> {
-      /**
-       * Builds the schema for the defined coercer.
-       *
-       * @param helpers Helper methods to build the schema.
-       * @returns Coerce schema.
-       */
-      (helpers: Core.BuilderHelpers): Schema;
-    }
-    /**
-     * Inferred coercer function. It accepts unknown data and coerces it to
-     * the expected shape.
-     */
-    export interface Coercer<Schema> {
-      /**
-       * Coerces the data to the defined shape. It ensures that the data is
-       * correctly shaped.
-       *
-       * @param data Data to coerce.
-       * @returns Coerced data.
-       */
-      (data: unknown): Infer<Schema>;
+      <Schema>(schema: Core.Builder<Schema> | Schema): Core.Coercer<
+        Infer<Schema>
+      >;
     }
 
     /**
      * Resolves the type shape from the coercer schema.
      */
-    export type Infer<Coercer_> = Coercer_ extends Coercer<infer Schema>
-      ? Utils.Combine<
-          {
-            [Key in RequiredKeys<Schema>]: InferField<Schema, Key>;
-          } & {
-            [Key in OptionalKeys<Schema>]?: InferField<Schema, Key>;
-          }
-        >
-      : never;
+    export type Infer<Schema> = Utils.Combine<
+      {
+        [Key in RequiredKeys<Schema>]: InferField<Schema, Key>;
+      } & {
+        [Key in OptionalKeys<Schema>]?: InferField<Schema, Key>;
+      }
+    >;
 
     /**
      * Resolves the type of the field from the schema.
