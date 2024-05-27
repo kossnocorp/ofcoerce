@@ -39,6 +39,7 @@ const coerceUser = coercer.infer(($) => ({
 }));
 
 type User = FromCoercer<typeof userCoercer>;
+// { user: string, email: string, age?: number }
 ```
 
 It also accepts `FormData` making it ideal when working with forms, especially inside of React Server Components:
@@ -51,18 +52,18 @@ const corceForm = coercer({
   password: String,
 });
 
-function SignUpForm() {
+function SignInForm() {
   return (
     <form
       action={async (formData) => {
         "use server";
         const form = coerceForm(formData);
-        await signUp(form);
+        await signIn(form);
       }}
     >
       <input name="email" type="email" required placeholder="Email" />
       <input name="password" type="password" required placeholder="Password" />
-      <button>Sign up</button>
+      <button>Sign in</button>
     </form>
   );
 }
