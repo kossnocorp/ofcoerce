@@ -34,6 +34,10 @@ describe("ofcoerce", () => {
     });
   });
 
+  it("has infer alias", () => {
+    expect(coercer.infer).toBe(coercer);
+  });
+
   it("coerces optional fields", () => {
     const coerce = createUserCoercer();
     const result = coerce({ age: "37" });
@@ -44,22 +48,101 @@ describe("ofcoerce", () => {
     });
   });
 
-  describe("primitives", () => {
-    it("accepts undefined", () => {
-      const coerce = createUserCoercer();
-      const result = coerce(undefined);
-      expect(result).toEqual({
+  it("accepts undefined", () => {
+    const coerce = createUserCoercer();
+    const result = coerce(undefined);
+    expect(result).toEqual({
+      name: "",
+      email: "",
+    });
+  });
+
+  it("accepts null", () => {
+    const coerce = createUserCoercer();
+    const result = coerce(null);
+    expect(result).toEqual({
+      name: "",
+      email: "",
+    });
+  });
+
+  describe("literals", () => {
+    it("coerces string literals", () => {
+      const coerce = coercer.infer({
+        type: "user",
+        name: String,
+      });
+      expect(coerce({ name: "Sasha" })).toEqual({
+        type: "user",
+        name: "Sasha",
+      });
+      expect(coerce({ type: "Sasha" })).toEqual({
+        type: "user",
         name: "",
-        email: "",
+      });
+      expect(coerce({ type: false })).toEqual({
+        type: "user",
+        name: "",
       });
     });
 
-    it("accepts null", () => {
-      const coerce = createUserCoercer();
-      const result = coerce(null);
-      expect(result).toEqual({
-        name: "",
-        email: "",
+    it("coerces number literals", () => {
+      const coerce = coercer.infer({
+        magic: 42,
+      });
+      expect(coerce(null)).toEqual({
+        magic: 42,
+      });
+      expect(coerce({ magic: "33" })).toEqual({
+        magic: 42,
+      });
+      expect(coerce({ magic: false })).toEqual({
+        magic: 42,
+      });
+    });
+
+    it("coerces boolean literals", () => {
+      const coerce = coercer.infer({
+        flag: true,
+      });
+      expect(coerce(null)).toEqual({
+        flag: true,
+      });
+      expect(coerce({ flag: false })).toEqual({
+        flag: true,
+      });
+      expect(coerce({ flag: 42 })).toEqual({
+        flag: true,
+      });
+    });
+
+    it("coerces null literals", () => {
+      const coerce = coercer.infer({
+        nope: null,
+      });
+      expect(coerce(null)).toEqual({
+        nope: null,
+      });
+      expect(coerce({ nope: "nah" })).toEqual({
+        nope: null,
+      });
+      expect(coerce({ nope: 0 })).toEqual({
+        nope: null,
+      });
+    });
+
+    it("coerces undefined literals", () => {
+      const coerce = coercer.infer({
+        nope: undefined,
+      });
+      expect(coerce(null)).toEqual({
+        nope: undefined,
+      });
+      expect(coerce({ nope: "nah" })).toEqual({
+        nope: undefined,
+      });
+      expect(coerce({ nope: 0 })).toEqual({
+        nope: undefined,
       });
     });
   });
@@ -121,12 +204,6 @@ describe("ofcoerce", () => {
         name: "Sasha",
         email: "koss@nocorp.me",
       });
-    });
-  });
-
-  describe("infer", () => {
-    it("refers to the coercer function", () => {
-      expect(coercer.infer).toBe(coercer);
     });
   });
 });

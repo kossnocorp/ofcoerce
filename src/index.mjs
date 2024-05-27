@@ -11,7 +11,10 @@ const helpers = {
 
 export function coercer(schema) {
   if (typeof schema === "function") schema = schema(helpers);
-  return function coerce(value, coercer = schema) {
+  return function coerce(value) {
+    // We can't use the default value as it will override undefined
+    const coercer = arguments.length === 2 ? arguments[1] : schema;
+
     // The coercer is a function (Boolean, Number, String, etc.), so we can it.
     if (typeof coercer === "function")
       return coercer(
@@ -23,28 +26,35 @@ export function coercer(schema) {
       return (value && value?.map((item) => coerce(item, coercer[0]))) || [];
 
     // The coercer is an object and each key must be coerced individually.
+    if (coercer && typeof coercer === "object") {
+      const result = {};
 
-    const result = {};
+      // Define getter to access FormData
+      value ||= {};
+      const get =
+        value instanceof FormData
+          ? (key) => value.get(key)
+          : (key) => value[key];
 
-    // Define getter to access FormData
-    value ||= {};
-    const get =
-      value instanceof FormData ? (key) => value.get(key) : (key) => value[key];
+      for (const key in coercer) {
+        const field = coercer[key];
 
-    for (const key in coercer) {
-      const field = coercer[key];
-
-      // Handle optional field
-      if (optionalSymbol in field) {
-        // Skip coercing optional field, if it is not present in the value
-        // [TODO] FormData support for this case
-        if (key in value) result[key] = coerce(get(key), field[optionalSymbol]);
+        // Handle optional field
+        if (field && typeof field === "object" && optionalSymbol in field) {
+          // Skip coercing optional field, if it is not present in the value
+          // [TODO] FormData support for this case
+          if (key in value)
+            result[key] = coerce(get(key), field[optionalSymbol]);
+        }
+        // Handle required field
+        else result[key] = coerce(get(key), field);
       }
-      // Handle required field
-      else result[key] = coerce(get(key), field);
+
+      return result;
     }
 
-    return result;
+    // The coercer is a literal, so we use it as the value
+    return coercer;
   };
 }
 
