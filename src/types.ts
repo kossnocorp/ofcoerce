@@ -55,7 +55,9 @@ export namespace OfCoerce {
        * @param types Types to union.
        * @returns Union coercer.
        */
-      Union<Type>(...types: Type[]): Union<Type>;
+      Union<Type extends any[]>(
+        ...types: Type
+      ): Union<Utils.UnionFromArray<Type>>;
     }
 
     /**
@@ -156,7 +158,9 @@ export namespace OfCoerce {
      * Resolves coerce schema from type shape.
      */
     export type ToSchema<Shape> = (
-      Shape extends boolean // Boolean
+      true extends Utils.IsLiteral<Shape> // Literal
+        ? Shape
+        : Shape extends boolean // Boolean
         ? BooleanConstructor
         : Shape extends string // String
         ? StringConstructor
@@ -184,10 +188,9 @@ export namespace OfCoerce {
      */
     export type FromSchema<Schema> = Schema extends Core.Union<infer Type> // Union
       ? FromSchema<Type>
-      : // ? Type extends Type
-      //   ? Type
-      //   : never
-      Schema extends BooleanConstructor // Boolean
+      : true extends Utils.IsLiteral<Schema> // Literal
+      ? Schema
+      : Schema extends BooleanConstructor // Boolean
       ? boolean
       : Schema extends NumberConstructor // Number
       ? number
@@ -199,16 +202,11 @@ export namespace OfCoerce {
       ? FromSchema<Type>
       : Schema extends Record<any, any> // Object
       ? Utils.Combine<
-          Utils.OmitNever<
-            {
-              [Key in RequiredSchemaKeys<Schema>]: FromSchemaField<Schema, Key>;
-            } & {
-              [Key in OptionalSchemaKeys<Schema>]?: FromSchemaField<
-                Schema,
-                Key
-              >;
-            }
-          >
+          {
+            [Key in RequiredSchemaKeys<Schema>]: FromSchemaField<Schema, Key>;
+          } & {
+            [Key in OptionalSchemaKeys<Schema>]?: FromSchemaField<Schema, Key>;
+          }
         >
       : never;
 
@@ -315,6 +313,33 @@ export namespace OfCoerce {
     ) extends false
       ? false
       : true;
+
+    /**
+     * Resolves true if the given type is a literal (i.e. true rather than boolean).
+     */
+    export type IsLiteral<Type> = string extends Type
+      ? false
+      : number extends Type
+      ? false
+      : boolean extends Type
+      ? false
+      : Type extends boolean | number | string | undefined | null
+      ? true
+      : false;
+
+    /**
+     * Resolves true if the passed field is undefined union and not optionally
+     * undefined.
+     */
+    export type IsUndefined<
+      Type,
+      Key extends keyof Type
+    > = undefined extends Required<Type>[Key] ? true : false;
+
+    /**
+     * Resolves union from the passed array.
+     */
+    export type UnionFromArray<Type extends any[]> = Type[number];
   }
   //#endregion
 }

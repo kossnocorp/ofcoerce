@@ -279,6 +279,54 @@ import { FromCoercer, coercer } from ".";
 }
 //#endregion
 
+//#region Primitives
+{
+  interface Mixed {
+    type: "hello";
+    flag: true;
+    nope: null;
+    nah: undefined;
+  }
+
+  //! It supports primitives
+
+  {
+    const coerceMixed = coercer<Mixed>(($) => ({
+      type: "hello",
+      flag: true,
+      nope: null,
+      nah: undefined,
+    }));
+
+    const mixed = coerceMixed(null);
+
+    //! It returns coerced data
+    mixed satisfies Mixed;
+    mixed.type;
+  }
+
+  {
+    const coerceMixed = coercer.infer(($) => ({
+      type: "hello" as const,
+      flag: true as const,
+      nope: null,
+      nah: undefined,
+    }));
+
+    const mixed = coerceMixed(null);
+
+    //! It works with inferred schema
+    mixed satisfies Mixed;
+    mixed.type;
+
+    //! If allows to infer schema
+    type MixedSchema = FromCoercer<typeof coerceMixed>;
+    type _a = Assert<Mixed, MixedSchema>;
+    type _b = Assert<MixedSchema, Mixed>;
+  }
+}
+//#endregion
+
 //#region Docs
 {
   const data = null as unknown;
