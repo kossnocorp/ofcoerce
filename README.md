@@ -4,7 +4,7 @@ Of Coerce! is a lightweight, near-zero overhead alternative to [Zod](https://zod
 
 Unlike these libraries, Of Coerce! focuses on a single task: ensuring the data corresponds to the types.
 
-It uses built-in JavaScript features to coerce whatever you pass to it, which makes it the fastest and the most lightweight solution (full library is `268B`!).
+It uses built-in JavaScript features to coerce whatever you pass to it, which makes it the fastest and the most lightweight solution (full library is `323B`!).
 
 ```ts
 import { coercer } from "ofcoerce";

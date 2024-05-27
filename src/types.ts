@@ -64,9 +64,10 @@ export namespace OfCoerce {
        * @param types Types to union.
        * @returns Union coercer.
        */
-      Union<Type extends any[]>(
-        ...types: Type
-      ): Union<Utils.UnionFromArray<Type>>;
+      // [TODO] Uncomment for the next version
+      // Union<Type extends any[]>(
+      //   ...types: Type
+      // ): Union<Utils.UnionFromArray<Type>>;
     }
 
     /**

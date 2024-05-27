@@ -1,6 +1,6 @@
 {
   "name": "ofcoerce",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Lightweight type coercion library",
   "main": "index.js",
   "module": "index.mjs",
