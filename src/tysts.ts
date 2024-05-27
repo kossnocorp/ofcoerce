@@ -142,6 +142,73 @@ import { OfCoerce } from "./types";
       //! It works with inferred schema
       user satisfies User;
       user.name.first;
+
+      //! If allows to infer schema
+      type UserSchema = FromCoercer<typeof coerceUser>;
+      type _a = Assert<User, UserSchema>;
+      type _b = Assert<UserSchema, User>;
+    }
+  }
+
+  {
+    interface Lyrics {
+      author?: string;
+      lines: string[];
+    }
+
+    interface Song {
+      title: string;
+      lyrics: Lyrics;
+      artist: string;
+    }
+
+    {
+      const coerceSong = coercer<Song>(($) => ({
+        title: String,
+        artist: String,
+        lyrics: {
+          author: $.Optional(String),
+          lines: Array(String),
+        },
+      }));
+
+      const song = coerceSong(null);
+
+      //! It coerces arrays
+      song satisfies Song;
+      song.title;
+      const line = song.lyrics.lines[0];
+      if (line) {
+        line satisfies string;
+        line.length;
+      }
+    }
+
+    {
+      const coerceSong = coercer.infer(($) => ({
+        title: String,
+        artist: String,
+        lyrics: {
+          author: $.Optional(String),
+          lines: Array(String),
+        },
+      }));
+
+      const song = coerceSong(null);
+
+      //! It works with inferred schema
+      song satisfies Song;
+      song.title;
+      const line = song.lyrics.lines[0];
+      if (line) {
+        line satisfies string;
+        line.length;
+      }
+
+      //! If allows to infer schema
+      type SongSchema = FromCoercer<typeof coerceSong>;
+      type _a = Assert<Song, SongSchema>;
+      type _b = Assert<SongSchema, Song>;
     }
   }
 }

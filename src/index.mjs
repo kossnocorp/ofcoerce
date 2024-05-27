@@ -10,25 +10,28 @@ const helpers = {
 
 export function coercer(schema) {
   if (typeof schema === "function") schema = schema(helpers);
-  return function coerce(source, schema_ = schema) {
-    source ||= {};
-    const result = {};
-    // Define getter to access FormData
-    const get =
-      source instanceof FormData
-        ? (key) => source.get(key)
-        : (key) => source[key];
-    for (const key in schema_) {
-      const field = schema_[key];
-      // Optional
-      if (typeof field === "function") result[key] = field(get(key) || "");
-      else if (optionalSymbol in field) {
-        if (key in source) result[key] = field[optionalSymbol](get(key) || "");
-      } else {
-        result[key] = coerce(get(key) || "", schema_[key]);
+  return function coerce(value, coercer = schema) {
+    if (typeof coercer === "function") return coercer(value || "");
+    else if (Array.isArray(coercer)) {
+      return (value && value?.map((item) => coerce(item, coercer[0]))) || [];
+    } else if (typeof coercer === "object") {
+      value ||= {};
+      const result = {};
+      // Define getter to access FormData
+      const get =
+        value instanceof FormData
+          ? (key) => value.get(key)
+          : (key) => value[key];
+      for (const key in coercer) {
+        const field = coercer[key];
+        if (optionalSymbol in field) {
+          // [TODO] FormData support for this case
+          if (key in value)
+            result[key] = coerce(get(key), field[optionalSymbol]);
+        } else result[key] = coerce(get(key), field);
       }
+      return result;
     }
-    return result;
   };
 }
 

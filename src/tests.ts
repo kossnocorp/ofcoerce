@@ -87,6 +87,35 @@ describe("ofcoerce", () => {
     });
   });
 
+  it("supports arrays", () => {
+    const coerce = createSongCoercer();
+    const result = coerce({
+      title: "Mind Control",
+      lyrics: {
+        lines: ["Hello", undefined],
+      },
+    });
+    expect(result).toEqual({
+      title: "Mind Control",
+      artist: "",
+      lyrics: {
+        lines: ["Hello", ""],
+      },
+    });
+  });
+
+  it("coerces missing arrays", () => {
+    const coerce = createSongCoercer();
+    const result = coerce(null);
+    expect(result).toEqual({
+      title: "",
+      artist: "",
+      lyrics: {
+        lines: [],
+      },
+    });
+  });
+
   describe("infer", () => {
     it("refers to the coercer function", () => {
       expect(coercer.infer).toBe(coercer);
@@ -139,5 +168,27 @@ function createOrderCoercer() {
       city: String,
     },
     paid: Boolean,
+  }));
+}
+
+interface Lyrics {
+  author?: string;
+  lines: string[];
+}
+
+interface Song {
+  title: string;
+  lyrics: Lyrics;
+  artist: string;
+}
+
+function createSongCoercer() {
+  return coercer<Song>(($) => ({
+    title: String,
+    artist: String,
+    lyrics: {
+      author: $.Optional(String),
+      lines: Array(String),
+    },
   }));
 }

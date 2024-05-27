@@ -100,18 +100,9 @@ export namespace OfCoerce {
        * @returns Coercer function.
        */
       <Shape>(
-        builder: Core.Builder<CoerceSchema<Shape>> | CoerceSchema<Shape>
+        builder: Core.Builder<Mapper.ToSchema<Shape>> | Mapper.ToSchema<Shape>
       ): Core.Coercer<Shape>;
     }
-
-    /**
-     * Resolves the schema from the given shape.
-     */
-    export type CoerceSchema<Shape> = {
-      [Key in keyof Shape]: true extends Utils.RequiredKey<Shape, Key>
-        ? Mapper.ToConstructor<Shape[Key]>
-        : Core.Optional<Mapper.ToConstructor<Shape[Key]>>;
-    };
   }
   //#endregion
 
@@ -130,50 +121,9 @@ export namespace OfCoerce {
        * @returns Coercer function.
        */
       <Schema>(schema: Core.Builder<Schema> | Schema): Core.Coercer<
-        Infer<Schema>
+        Mapper.FromSchema<Schema>
       >;
     }
-
-    /**
-     * Resolves the type shape from the coercer schema.
-     */
-    export type Infer<Schema> = Utils.Combine<
-      {
-        [Key in RequiredKeys<Schema>]: InferField<Schema, Key>;
-      } & {
-        [Key in OptionalKeys<Schema>]?: InferField<Schema, Key>;
-      }
-    >;
-
-    /**
-     * Resolves the type of the field from the schema.
-     */
-    export type InferField<
-      Schema,
-      Key extends keyof Schema
-    > = Schema[Key] extends Core.Optional<infer Type>
-      ? Mapper.FromConstructor<Type>
-      : Mapper.FromConstructor<Schema[Key]>;
-
-    /**
-     * Resolves the required schema keys.
-     */
-    export type RequiredKeys<Schema> = Exclude<
-      keyof Schema,
-      OptionalKeys<Schema>
-    >;
-
-    /**
-     * Resolves the optional schema keys.
-     */
-    export type OptionalKeys<Schema> =
-      keyof Schema extends infer Key extends keyof Schema
-        ? Key extends Key
-          ? Schema[Key] extends Core.Optional<any>
-            ? Key
-            : never
-          : never
-        : never;
   }
   //#endregion
 
@@ -184,30 +134,74 @@ export namespace OfCoerce {
    */
   export namespace Mapper {
     /**
-     * Resolves constructor for the given type.
+     * Resolves coerce schema from type shape.
      */
-    export type ToConstructor<Type> = Type extends boolean
+    export type ToSchema<Shape> = Shape extends boolean
       ? BooleanConstructor
-      : Type extends string
+      : Shape extends string
       ? StringConstructor
-      : Type extends number
+      : Shape extends number
       ? NumberConstructor
-      : Type extends Record<any, any>
-      ? { [Key in keyof Type]: ToConstructor<Type[Key]> }
+      : Shape extends Array<infer Item>
+      ? ToSchema<Item>[]
+      : Shape extends Record<any, any>
+      ? {
+          [Key in keyof Shape]: true extends Utils.RequiredKey<Shape, Key>
+            ? Mapper.ToSchema<Shape[Key]>
+            : Core.Optional<Mapper.ToSchema<Shape[Key]>>;
+        }
       : never;
 
     /**
-     * Resolves type from constructor.
+     * Resolves type shape from coerce schema.
      */
-    export type FromConstructor<Type> = Type extends BooleanConstructor
+    export type FromSchema<Schema> = Schema extends BooleanConstructor
       ? boolean
-      : Type extends NumberConstructor
+      : Schema extends NumberConstructor
       ? number
-      : Type extends StringConstructor
+      : Schema extends StringConstructor
       ? string
-      : Type extends Record<any, any>
-      ? { [Key in keyof Type]: FromConstructor<Type[Key]> }
+      : Schema extends Array<infer Item>
+      ? FromSchema<Item>[]
+      : Schema extends Record<any, any>
+      ? Utils.Combine<
+          {
+            [Key in RequiredSchemaKeys<Schema>]: FromSchemaField<Schema, Key>;
+          } & {
+            [Key in OptionalSchemaKeys<Schema>]?: FromSchemaField<Schema, Key>;
+          }
+        >
       : never;
+
+    /**
+     * Resolves the type of the field from the schema.
+     */
+    export type FromSchemaField<
+      Schema,
+      Key extends keyof Schema
+    > = Schema[Key] extends Core.Optional<infer Type>
+      ? Mapper.FromSchema<Type>
+      : Mapper.FromSchema<Schema[Key]>;
+
+    /**
+     * Resolves the required schema keys.
+     */
+    export type RequiredSchemaKeys<Schema> = Exclude<
+      keyof Schema,
+      OptionalSchemaKeys<Schema>
+    >;
+
+    /**
+     * Resolves the optional schema keys.
+     */
+    export type OptionalSchemaKeys<Schema> =
+      keyof Schema extends infer Key extends keyof Schema
+        ? Key extends Key
+          ? Schema[Key] extends Core.Optional<any>
+            ? Key
+            : never
+          : never
+        : never;
   }
   //#endregion
 

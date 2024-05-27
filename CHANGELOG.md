@@ -8,11 +8,19 @@ This change log follows the format documented in [Keep a CHANGELOG].
 [semantic versioning]: http://semver.org/
 [keep a changelog]: http://keepachangelog.com/
 
-## v0.2.1 - 2024-05-27
+## v0.3.0 - 2024-05-27
 
 ### Fixed
 
 - Fixed `FromCoercer` type to properly resolve the type shape.
+
+### Added
+
+- Added support for arrays (`Array(String)`).
+
+### Changed
+
+- Imporoved support for nested objects.
 
 ## v0.2.0 - 2024-05-27
 
