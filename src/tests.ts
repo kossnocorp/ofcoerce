@@ -74,6 +74,19 @@ describe("ofcoerce", () => {
     });
   });
 
+  it("supports nested objects", () => {
+    const coerce = createOrderCoercer();
+    const result = coerce({});
+    expect(result).toEqual({
+      amount: 0,
+      address: {
+        street: "",
+        city: "",
+      },
+      paid: false,
+    });
+  });
+
   describe("infer", () => {
     it("refers to the coercer function", () => {
       expect(coercer.infer).toBe(coercer);
@@ -105,4 +118,26 @@ function createProjectCoercer() {
     slug: String,
     name: String,
   });
+}
+
+interface Address {
+  street: string;
+  city: string;
+}
+
+interface Order {
+  amount: number;
+  address: Address;
+  paid: boolean;
+}
+
+function createOrderCoercer() {
+  return coercer<Order>(($) => ({
+    amount: Number,
+    address: {
+      street: String,
+      city: String,
+    },
+    paid: Boolean,
+  }));
 }

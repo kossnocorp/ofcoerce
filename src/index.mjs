@@ -10,7 +10,7 @@ const helpers = {
 
 export function coercer(schema) {
   if (typeof schema === "function") schema = schema(helpers);
-  return function coerce(source) {
+  return function coerce(source, schema_ = schema) {
     source ||= {};
     const result = {};
     // Define getter to access FormData
@@ -18,13 +18,14 @@ export function coercer(schema) {
       source instanceof FormData
         ? (key) => source.get(key)
         : (key) => source[key];
-    for (const key in schema) {
-      const field = schema[key];
+    for (const key in schema_) {
+      const field = schema_[key];
       // Optional
-      if (optionalSymbol in field) {
+      if (typeof field === "function") result[key] = field(get(key) || "");
+      else if (optionalSymbol in field) {
         if (key in source) result[key] = field[optionalSymbol](get(key) || "");
       } else {
-        result[key] = field(get(key) || "");
+        result[key] = coerce(get(key) || "", schema_[key]);
       }
     }
     return result;

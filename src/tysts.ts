@@ -98,6 +98,56 @@ import { OfCoerce } from "./types";
 }
 //#endregion
 
+//#region Nested
+{
+  {
+    interface Name {
+      first: string;
+      last: string;
+    }
+
+    interface User {
+      name: Name;
+      email: string;
+    }
+
+    //! It coerces nested objects
+
+    {
+      const coerceUser = coercer<User>(($) => ({
+        name: {
+          first: String,
+          last: String,
+        },
+        email: String,
+      }));
+
+      const user = coerceUser(null);
+
+      //! It returns coerced data
+      user satisfies User;
+      user.name.first;
+    }
+
+    {
+      const coerceUser = coercer.infer(($) => ({
+        name: {
+          first: String,
+          last: String,
+        },
+        email: String,
+      }));
+
+      const user = coerceUser(null);
+
+      //! It works with inferred schema
+      user satisfies User;
+      user.name.first;
+    }
+  }
+}
+//#endregion
+
 //#region Docs
 {
   const data = null as unknown;

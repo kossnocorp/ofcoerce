@@ -192,10 +192,12 @@ export namespace OfCoerce {
       ? StringConstructor
       : Type extends number
       ? NumberConstructor
+      : Type extends Record<any, any>
+      ? { [Key in keyof Type]: ToConstructor<Type[Key]> }
       : never;
 
     /**
-     * Resoles type from constructor.
+     * Resolves type from constructor.
      */
     export type FromConstructor<Type> = Type extends BooleanConstructor
       ? boolean
@@ -203,6 +205,8 @@ export namespace OfCoerce {
       ? number
       : Type extends StringConstructor
       ? string
+      : Type extends Record<any, any>
+      ? { [Key in keyof Type]: FromConstructor<Type[Key]> }
       : never;
   }
   //#endregion
