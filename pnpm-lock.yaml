@@ -38,6 +38,9 @@ importers:
       glob:
         specifier: ^10.4.1
         version: 10.4.1
+      minimatch:
+        specifier: ^9.0.4
+        version: 9.0.4
       picocolors:
         specifier: ^1.0.1
         version: 1.0.1

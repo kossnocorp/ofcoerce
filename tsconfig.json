@@ -8,7 +8,6 @@
     "strict": true,
     "exactOptionalPropertyTypes": true,
     "noUncheckedIndexedAccess": true,
-    "skipLibCheck": true,
     "allowJs": true
     // [NOTE]: Enable only when debugging as it slows down the compilation
     // "noErrorTruncation": true

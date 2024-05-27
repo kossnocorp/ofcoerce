@@ -28,15 +28,8 @@ build: prepare-build
 	@env BABEL_ENV=cjs npx babel src --config-file ./babel.config.lib.json --source-root src --out-dir lib --extensions .mjs,.ts --out-file-extension .js --quiet
 	@node copy.mjs
 	@rm -rf lib/types.*js
-	@make build-mts
-	@rm lib/types.d.mts
+	@cp lib/index.d.ts lib/index.d.mts
 	
-build-mts:
-	@find lib -name '*.d.ts' | while read file; do \
-		new_file=$${file%.d.ts}.d.mts; \
-		cp $$file $$new_file; \
-	done
-
 prepare-build:
 	@rm -rf lib
 	@mkdir -p lib
