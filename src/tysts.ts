@@ -65,14 +65,13 @@ import { OfCoerce } from "./types";
     }));
 
     type UserSchema = FromCoercer<typeof coerceUser>;
-    type _ = Assert<User, UserSchema>;
+    type _a = Assert<User, UserSchema>;
+    type _b = Assert<UserSchema, User>;
 
     //! It returns coerced data
     const user = coerceUser(null);
     user satisfies User;
     user.name;
-
-    // [TODo] Remove debug code vvvvvv
 
     //! It allows to pass schema directly
 

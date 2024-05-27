@@ -79,7 +79,7 @@ export namespace OfCoerce {
      * Resolves the type shape from the coercer schema.
      */
     export type FromCoercer<Coercer_> = Coercer_ extends Coercer<infer Schema>
-      ? Inferred.Infer<Schema>
+      ? Schema
       : never;
   }
   //#endregion
