@@ -34,24 +34,6 @@ describe("ofcoerce", () => {
     });
   });
 
-  it("accepts undefined", () => {
-    const coerce = createUserCoercer();
-    const result = coerce(undefined);
-    expect(result).toEqual({
-      name: "",
-      email: "",
-    });
-  });
-
-  it("accepts null", () => {
-    const coerce = createUserCoercer();
-    const result = coerce(null);
-    expect(result).toEqual({
-      name: "",
-      email: "",
-    });
-  });
-
   it("coerces optional fields", () => {
     const coerce = createUserCoercer();
     const result = coerce({ age: "37" });
@@ -62,57 +44,83 @@ describe("ofcoerce", () => {
     });
   });
 
-  it("supports FormData", () => {
-    const coerce = createUserCoercer();
-    const formData = new FormData();
-    formData.append("name", "Sasha");
-    formData.append("email", "koss@nocorp.me");
-    const result = coerce(formData);
-    expect(result).toEqual({
-      name: "Sasha",
-      email: "koss@nocorp.me",
+  describe("primitives", () => {
+    it("accepts undefined", () => {
+      const coerce = createUserCoercer();
+      const result = coerce(undefined);
+      expect(result).toEqual({
+        name: "",
+        email: "",
+      });
+    });
+
+    it("accepts null", () => {
+      const coerce = createUserCoercer();
+      const result = coerce(null);
+      expect(result).toEqual({
+        name: "",
+        email: "",
+      });
     });
   });
 
-  it("supports nested objects", () => {
-    const coerce = createOrderCoercer();
-    const result = coerce({});
-    expect(result).toEqual({
-      amount: 0,
-      address: {
-        street: "",
-        city: "",
-      },
-      paid: false,
+  describe("objects", () => {
+    it("supports nested objects", () => {
+      const coerce = createOrderCoercer();
+      const result = coerce({});
+      expect(result).toEqual({
+        amount: 0,
+        address: {
+          street: "",
+          city: "",
+        },
+        paid: false,
+      });
     });
   });
 
-  it("supports arrays", () => {
-    const coerce = createSongCoercer();
-    const result = coerce({
-      title: "Mind Control",
-      lyrics: {
-        lines: ["Hello", undefined],
-      },
+  describe("arrays", () => {
+    it("supports arrays", () => {
+      const coerce = createSongCoercer();
+      const result = coerce({
+        title: "Mind Control",
+        lyrics: {
+          lines: ["Hello", undefined],
+        },
+      });
+      expect(result).toEqual({
+        title: "Mind Control",
+        artist: "",
+        lyrics: {
+          lines: ["Hello", ""],
+        },
+      });
     });
-    expect(result).toEqual({
-      title: "Mind Control",
-      artist: "",
-      lyrics: {
-        lines: ["Hello", ""],
-      },
+
+    it("coerces missing arrays", () => {
+      const coerce = createSongCoercer();
+      const result = coerce(null);
+      expect(result).toEqual({
+        title: "",
+        artist: "",
+        lyrics: {
+          lines: [],
+        },
+      });
     });
   });
 
-  it("coerces missing arrays", () => {
-    const coerce = createSongCoercer();
-    const result = coerce(null);
-    expect(result).toEqual({
-      title: "",
-      artist: "",
-      lyrics: {
-        lines: [],
-      },
+  describe("iterators", () => {
+    it("supports FormData", () => {
+      const coerce = createUserCoercer();
+      const formData = new FormData();
+      formData.append("name", "Sasha");
+      formData.append("email", "koss@nocorp.me");
+      const result = coerce(formData);
+      expect(result).toEqual({
+        name: "Sasha",
+        email: "koss@nocorp.me",
+      });
     });
   });
 
