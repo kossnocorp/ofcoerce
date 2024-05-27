@@ -1,5 +1,4 @@
 import { FromCoercer, coercer } from ".";
-import { OfCoerce } from "./types";
 
 //#region Core
 {
@@ -214,6 +213,72 @@ import { OfCoerce } from "./types";
 }
 //#endregion
 
+//#region Unions
+{
+  type Credentials = EmailCredentials | PhoneCredentials;
+
+  interface EmailCredentials {
+    email: string;
+    password: string;
+  }
+
+  interface PhoneCredentials {
+    phone: string;
+  }
+
+  interface User {
+    name: string;
+    credentials: Credentials;
+  }
+
+  //! It allows to specify a shape with an union
+  {
+    const coerceUser = coercer<User>(($) => ({
+      name: String,
+      credentials: $.Union(
+        {
+          email: String,
+          password: String,
+        },
+        {
+          phone: String,
+        }
+      ),
+    }));
+
+    //! It returns coerced data
+    const user = coerceUser(null);
+    user.credentials satisfies Credentials;
+    if ("email" in user.credentials) user.credentials.password;
+  }
+
+  //! It allows to infer schema
+  {
+    const coerceUser = coercer.infer(($) => ({
+      name: String,
+      credentials: $.Union(
+        {
+          email: String,
+          password: String,
+        },
+        {
+          phone: String,
+        }
+      ),
+    }));
+
+    type UserSchema = FromCoercer<typeof coerceUser>;
+    type _a = Assert<User, UserSchema>;
+    type _b = Assert<UserSchema, User>;
+
+    //! It returns coerced data
+    const user = coerceUser(null);
+    user.credentials satisfies Credentials;
+    if ("email" in user.credentials) user.credentials.password;
+  }
+}
+//#endregion
+
 //#region Docs
 {
   const data = null as unknown;
@@ -238,8 +303,6 @@ import { OfCoerce } from "./types";
       email: String,
       age: $.Optional(Number),
     }));
-
-    // type User = FromCoercer<typeof userCoercer>;
 
     const user = coerceUser(data);
     //=> { user: "Sasha", email: "" }

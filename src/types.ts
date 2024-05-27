@@ -8,15 +8,6 @@ export namespace OfCoerce {
    */
   export namespace Core {
     /**
-     * The core factory unifing defined and inferred factories.
-     */
-    export interface Factory extends Defined.Factory {
-      /** Inferred version of the coercer factory. It infers the type from
-       * the schema returned from the builder function. */
-      infer: Inferred.Factory;
-    }
-
-    /**
      * Builder function that returns the schema for the defined coercer.
      */
     export interface Builder<Schema> {
@@ -56,6 +47,15 @@ export namespace OfCoerce {
        * @returns Optional coercer.
        */
       Optional<Type>(type: Type): Optional<Type>;
+
+      /**
+       * Returns union type coercer. It wraps the constructor to signal that
+       * the field is union.
+       *
+       * @param types Types to union.
+       * @returns Union coercer.
+       */
+      Union<Type>(...types: Type[]): Union<Type>;
     }
 
     /**
@@ -73,6 +73,20 @@ export namespace OfCoerce {
     export declare const OptionalSymbol: unique symbol;
 
     /**
+     * Union coercer type. Wraps the constructor to signal that the field is
+     * union.
+     */
+    export interface Union<Type> {
+      /** Assigned type. */
+      [UnionSymbol]: Type;
+    }
+
+    /**
+     * Symbol that helps to access the union type.
+     */
+    export declare const UnionSymbol: unique symbol;
+
+    /**
      * Infers type share from coercerer.
      */
     /**
@@ -84,14 +98,23 @@ export namespace OfCoerce {
   }
   //#endregion
 
-  //#region Defined
-  export namespace Defined {
+  //#region Factory
+  export namespace Factory {
+    /**
+     * Factory unifing defined and inferred factories.
+     */
+    export interface Factory extends Factory.Defined {
+      /** Inferred version of the coercer factory. It infers the type from
+       * the schema returned from the builder function. */
+      infer: Factory.Inferred;
+    }
+
     /**
      * Defined coercer factory. It accepts the type shape as the generic and
      * type checks the schema returned from the builder function against
      * the shape.
      */
-    export interface Factory {
+    export interface Defined {
       /**
        * Creates coercer for the given shape. It returns a function that
        * coerces any data to the defined shape.
@@ -103,16 +126,12 @@ export namespace OfCoerce {
         builder: Core.Builder<Mapper.ToSchema<Shape>> | Mapper.ToSchema<Shape>
       ): Core.Coercer<Shape>;
     }
-  }
-  //#endregion
 
-  //#region Inferred
-  export namespace Inferred {
     /**
      * Inferred coercer factory. It infers the type from the schema returned
      * from the builder function.
      */
-    export interface Factory {
+    export interface Inferred {
       /**
        * Creates coercer from the coercer schema. It returns a function that
        * coerces any data to the defined shape.
@@ -136,40 +155,60 @@ export namespace OfCoerce {
     /**
      * Resolves coerce schema from type shape.
      */
-    export type ToSchema<Shape> = Shape extends boolean
-      ? BooleanConstructor
-      : Shape extends string
-      ? StringConstructor
-      : Shape extends number
-      ? NumberConstructor
-      : Shape extends Array<infer Item>
-      ? ToSchema<Item>[]
-      : Shape extends Record<any, any>
-      ? {
-          [Key in keyof Shape]: true extends Utils.RequiredKey<Shape, Key>
-            ? Mapper.ToSchema<Shape[Key]>
-            : Core.Optional<Mapper.ToSchema<Shape[Key]>>;
-        }
+    export type ToSchema<Shape> = (
+      Shape extends boolean // Boolean
+        ? BooleanConstructor
+        : Shape extends string // String
+        ? StringConstructor
+        : Shape extends number // Number
+        ? NumberConstructor
+        : Shape extends Array<infer Item> // Array
+        ? ToSchema<Item>[]
+        : Shape extends Record<any, any> // Object
+        ? {
+            [Key in keyof Shape]: true extends Utils.RequiredKey<Shape, Key>
+              ? Mapper.ToSchema<Shape[Key]>
+              : Core.Optional<Mapper.ToSchema<Shape[Key]>>;
+          }
+        : never
+    ) extends infer Type
+      ? // I wrap it into the union at the end to make it chance to resolve to
+        // the final type to avoid false positive on the union check.
+        true extends Utils.IsUnion<Type>
+        ? Core.Union<Type>
+        : Type
       : never;
 
     /**
      * Resolves type shape from coerce schema.
      */
-    export type FromSchema<Schema> = Schema extends BooleanConstructor
+    export type FromSchema<Schema> = Schema extends Core.Union<infer Type> // Union
+      ? FromSchema<Type>
+      : // ? Type extends Type
+      //   ? Type
+      //   : never
+      Schema extends BooleanConstructor // Boolean
       ? boolean
-      : Schema extends NumberConstructor
+      : Schema extends NumberConstructor // Number
       ? number
-      : Schema extends StringConstructor
+      : Schema extends StringConstructor // String
       ? string
-      : Schema extends Array<infer Item>
+      : Schema extends Array<infer Item> // Array
       ? FromSchema<Item>[]
-      : Schema extends Record<any, any>
+      : Schema extends Core.Union<infer Type> // Union
+      ? FromSchema<Type>
+      : Schema extends Record<any, any> // Object
       ? Utils.Combine<
-          {
-            [Key in RequiredSchemaKeys<Schema>]: FromSchemaField<Schema, Key>;
-          } & {
-            [Key in OptionalSchemaKeys<Schema>]?: FromSchemaField<Schema, Key>;
-          }
+          Utils.OmitNever<
+            {
+              [Key in RequiredSchemaKeys<Schema>]: FromSchemaField<Schema, Key>;
+            } & {
+              [Key in OptionalSchemaKeys<Schema>]?: FromSchemaField<
+                Schema,
+                Key
+              >;
+            }
+          >
         >
       : never;
 
@@ -267,6 +306,15 @@ export namespace OfCoerce {
     export type Combine<Type> = {
       [Key in keyof Type]: Type[Key];
     };
+
+    /**
+     * Resolves true if the given type is a union.
+     */
+    export type IsUnion<Type, Copy extends Type = Type> = (
+      Type extends any ? (Copy extends Type ? false : true) : never
+    ) extends false
+      ? false
+      : true;
   }
   //#endregion
 }
