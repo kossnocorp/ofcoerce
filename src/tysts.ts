@@ -291,12 +291,12 @@ import { FromCoercer, coercer } from ".";
   //! It supports primitives
 
   {
-    const coerceMixed = coercer<Mixed>(($) => ({
+    const coerceMixed = coercer<Mixed>({
       type: "hello",
       flag: true,
       nope: null,
       nah: undefined,
-    }));
+    });
 
     const mixed = coerceMixed(null);
 
@@ -306,12 +306,12 @@ import { FromCoercer, coercer } from ".";
   }
 
   {
-    const coerceMixed = coercer.infer(($) => ({
+    const coerceMixed = coercer.infer({
       type: "hello" as const,
       flag: true as const,
       nope: null,
       nah: undefined,
-    }));
+    });
 
     const mixed = coerceMixed(null);
 
@@ -323,6 +323,51 @@ import { FromCoercer, coercer } from ".";
     type MixedSchema = FromCoercer<typeof coerceMixed>;
     type _a = Assert<Mixed, MixedSchema>;
     type _b = Assert<MixedSchema, Mixed>;
+  }
+}
+//#endregion
+
+//#region Custom coercers
+{
+  interface SignInForm {
+    email: string;
+    password: string;
+    rememberMe: boolean;
+  }
+
+  function CheckboxBoolean(value: unknown): boolean {
+    if (typeof value === "boolean") return value;
+    return value === "on";
+  }
+
+  //! It allows to use custom coercers
+  {
+    const coerceForm = coercer<SignInForm>({
+      email: String,
+      password: String,
+      rememberMe: CheckboxBoolean,
+    });
+
+    //! It returns coerced data
+    const form = coerceForm(null);
+    form.rememberMe satisfies boolean;
+  }
+
+  //! It allows to infer schema
+  {
+    const coerceForm = coercer.infer({
+      email: String,
+      password: String,
+      rememberMe: CheckboxBoolean,
+    });
+
+    type FormSchema = FromCoercer<typeof coerceForm>;
+    type _a = Assert<SignInForm, FormSchema>;
+    type _b = Assert<FormSchema, SignInForm>;
+
+    //! It returns coerced data
+    const form = coerceForm(null);
+    form.rememberMe satisfies boolean;
   }
 }
 //#endregion

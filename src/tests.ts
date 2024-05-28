@@ -193,6 +193,45 @@ describe("ofcoerce", () => {
     });
   });
 
+  describe("custom coercers", () => {
+    it("allows to pass custom coercers", () => {
+      interface SignInForm {
+        email: string;
+        password: string;
+        rememberMe: boolean;
+      }
+
+      function CheckboxBoolean(value: unknown): boolean {
+        if (typeof value === "boolean") return value;
+        return value === "on";
+      }
+
+      const coerce = coercer<SignInForm>({
+        email: String,
+        password: String,
+        rememberMe: CheckboxBoolean,
+      });
+
+      expect(coerce({})).toEqual({
+        email: "",
+        password: "",
+        rememberMe: false,
+      });
+
+      expect(coerce({ rememberMe: [] })).toEqual({
+        email: "",
+        password: "",
+        rememberMe: false,
+      });
+
+      expect(coerce({ rememberMe: "on" })).toEqual({
+        email: "",
+        password: "",
+        rememberMe: true,
+      });
+    });
+  });
+
   describe("iterators", () => {
     it("supports FormData", () => {
       const coerce = createUserCoercer();

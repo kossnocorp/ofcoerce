@@ -113,9 +113,6 @@ export namespace OfCoerce {
     export declare const UnionSymbol: unique symbol;
 
     /**
-     * Infers type share from coercerer.
-     */
-    /**
      * Resolves the type shape from the coercer schema.
      */
     export type FromCoercer<Coercer_> = Coercer_ extends Coercer<infer Schema>
@@ -149,7 +146,9 @@ export namespace OfCoerce {
        * @returns Coercer function.
        */
       <Shape>(
-        builder: Core.Builder<Mapper.ToSchema<Shape>> | Mapper.ToSchema<Shape>
+        builder:
+          | Core.Builder<Mapper.ToSchema<Shape, "root">>
+          | Mapper.ToSchema<Shape, "root">
       ): Core.Coercer<Shape>;
     }
 
@@ -181,31 +180,52 @@ export namespace OfCoerce {
     /**
      * Resolves coerce schema from type shape.
      */
-    export type ToSchema<Shape> = (
+    export type ToSchema<Shape, Flag extends "root" | undefined = undefined> = (
       true extends Utils.IsLiteral<Shape> // Literal
-        ? Shape
+        ? SchemaPair<Shape>
         : Shape extends boolean // Boolean
-        ? BooleanConstructor
+        ? SchemaPair<boolean, BooleanConstructor>
         : Shape extends string // String
-        ? StringConstructor
+        ? SchemaPair<string, StringConstructor>
         : Shape extends number // Number
-        ? NumberConstructor
+        ? SchemaPair<number, NumberConstructor>
         : Shape extends Array<infer Item> // Array
-        ? Core.Array<ToSchema<Item>>
+        ? SchemaPair<Shape, Core.Array<ToSchema<Item>>>
         : Shape extends Record<any, any> // Object
-        ? {
-            [Key in keyof Shape]: true extends Utils.RequiredKey<Shape, Key>
-              ? Mapper.ToSchema<Shape[Key]>
-              : Core.Optional<Mapper.ToSchema<Shape[Key]>>;
-          }
+        ? SchemaPair<
+            Shape,
+            {
+              [Key in keyof Shape]: true extends Utils.RequiredKey<Shape, Key>
+                ? ToSchema<Shape[Key]>
+                : Core.Optional<ToSchema<Shape[Key]>>;
+            }
+          >
         : never
     ) extends infer Type
       ? // I wrap it into the union at the end to make it chance to resolve to
         // the final type to avoid false positive on the union check.
         true extends Utils.IsUnion<Type>
-        ? Core.Union<Type>
-        : Type
+        ? // Resolve union
+          | Core.Union<
+                Type extends SchemaPair<any, infer Coercer> ? Coercer : never
+              >
+            | (Flag extends "root"
+                ? never
+                : Type extends SchemaPair<infer Type, any>
+                ? Core.Coercer<Shape>
+                : never)
+        : // Resolve single type
+        Type extends SchemaPair<infer Shape, infer Coercer>
+        ? Coercer | (Flag extends "root" ? never : Core.Coercer<Shape>)
+        : never
       : never;
+
+    /**
+     * Pair of original type and its coercer. It allows to detect union type
+     * in {@link ToSchema} before the final coercer is unioned with custom
+     * coercer function.
+     */
+    export type SchemaPair<Type, Coercer = Type> = [Type, Coercer];
 
     /**
      * Resolves type shape from coerce schema.
@@ -224,6 +244,8 @@ export namespace OfCoerce {
       ? FromSchema<Item>[]
       : Schema extends Core.Union<infer Type> // Union
       ? FromSchema<Type>
+      : Schema extends Core.Coercer<infer Type> // Coercer
+      ? Type
       : Schema extends Record<any, any> // Object
       ? Utils.Combine<
           {
