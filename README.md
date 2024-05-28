@@ -38,7 +38,7 @@ const coerceUser = coercer.infer(($) => ({
   age: $.Optional(Number),
 }));
 
-type User = FromCoercer<typeof userCoercer>;
+type User = FromCoercer<typeof coerceUser>;
 // { user: string, email: string, age?: number }
 ```
 
@@ -47,7 +47,7 @@ It also accepts `FormData` making it ideal when working with forms, especially i
 ```tsx
 import { coercer } from "ofcoerce";
 
-const corceForm = coercer({
+const coerceForm = coercer({
   email: String,
   password: String,
 });
