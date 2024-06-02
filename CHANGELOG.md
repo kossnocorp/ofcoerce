@@ -8,6 +8,12 @@ This change log follows the format documented in [Keep a CHANGELOG].
 [semantic versioning]: http://semver.org/
 [keep a changelog]: http://keepachangelog.com/
 
+## v0.6.0 - 2024-06-02
+
+### Added
+
+- Added support for branded types that now accept corresponding built-in coercer or custom coercer returning the branded type.
+
 ## v0.5.0 - 2024-05-28
 
 ### Added

@@ -181,14 +181,16 @@ export namespace OfCoerce {
      * Resolves coerce schema from type shape.
      */
     export type ToSchema<Shape, Flag extends "root" | undefined = undefined> = (
-      true extends Utils.IsLiteral<Shape> // Literal
+      true extends Utils.IsLiteral<
+        Utils.Debrand<Shape> // Branded types are detected as literal
+      > // Literal
         ? SchemaPair<Shape>
-        : Shape extends boolean // Boolean
-        ? SchemaPair<boolean, BooleanConstructor>
-        : Shape extends string // String
-        ? SchemaPair<string, StringConstructor>
-        : Shape extends number // Number
-        ? SchemaPair<number, NumberConstructor>
+        : Utils.Debrand<Shape> extends boolean // Boolean
+        ? SchemaPair<Shape, BooleanConstructor>
+        : Utils.Debrand<Shape> extends string // String
+        ? SchemaPair<Shape, StringConstructor>
+        : Utils.Debrand<Shape> extends number // Number
+        ? SchemaPair<Shape, NumberConstructor>
         : Shape extends Array<infer Item> // Array
         ? SchemaPair<Shape, Core.Array<ToSchema<Item>>>
         : Shape extends Record<any, any> // Object
@@ -197,7 +199,13 @@ export namespace OfCoerce {
             {
               [Key in keyof Shape]: true extends Utils.RequiredKey<Shape, Key>
                 ? ToSchema<Shape[Key]>
-                : Core.Optional<ToSchema<Shape[Key]>>;
+                : Core.Optional<
+                    // Exclude undefined from the field if it's not explicitly
+                    // defined as such.
+                    true extends Utils.IsUndefined<Shape, Key>
+                      ? ToSchema<Shape[Key]>
+                      : ToSchema<Exclude<Shape[Key], undefined>>
+                  >;
             }
           >
         : never
@@ -206,24 +214,26 @@ export namespace OfCoerce {
         // the final type to avoid false positive on the union check.
         true extends Utils.IsUnion<Type>
         ? // Resolve union
+          // First add the defined coercer (String, Number, etc.)
           | Core.Union<
                 Type extends SchemaPair<any, infer Coercer> ? Coercer : never
               >
+            // Now add the custom coercer
             | (Flag extends "root"
                 ? never
                 : Type extends SchemaPair<infer Type, any>
-                ? Core.Coercer<Shape>
+                ? Core.Coercer<Type>
                 : never)
         : // Resolve single type
-        Type extends SchemaPair<infer Shape, infer Coercer>
-        ? Coercer | (Flag extends "root" ? never : Core.Coercer<Shape>)
+        Type extends SchemaPair<infer Type, infer Coercer>
+        ? Coercer | (Flag extends "root" ? never : Core.Coercer<Type>)
         : never
       : never;
 
     /**
-     * Pair of original type and its coercer. It allows to detect union type
-     * in {@link ToSchema} before the final coercer is unioned with custom
-     * coercer function.
+     * Combines the original type and its coercer. It allows to detect union
+     * type in {@link ToSchema} before the final coercer is unioned with
+     * custom coercer function.
      */
     export type SchemaPair<Type, Coercer = Type> = [Type, Coercer];
 
@@ -354,9 +364,13 @@ export namespace OfCoerce {
     /**
      * Resolves true if the given type is a union.
      */
-    export type IsUnion<Type, Copy extends Type = Type> = (
-      Type extends any ? (Copy extends Type ? false : true) : never
-    ) extends false
+    export type IsUnion<Type, Copy extends Type = Type> = boolean extends Type
+      ? Exclude<Type, boolean> extends never
+        ? false
+        : true
+      : (
+          Type extends any ? (Copy extends Type ? false : true) : never
+        ) extends false
       ? false
       : true;
 
@@ -386,6 +400,24 @@ export namespace OfCoerce {
      * Resolves union from the passed array.
      */
     export type UnionFromArray<Type extends any[]> = Type[number];
+
+    /**
+     * Any brand shape.
+     */
+    export type AnyBrand = {
+      [key: string | number | symbol]: any;
+    };
+
+    /**
+     * Resolves type with brand excluded.
+     */
+    export type Debrand<Type> = Type extends boolean & AnyBrand
+      ? boolean
+      : Type extends string & AnyBrand
+      ? string
+      : Type extends number & AnyBrand
+      ? number
+      : Type;
   }
   //#endregion
 }

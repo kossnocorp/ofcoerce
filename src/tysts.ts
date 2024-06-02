@@ -372,6 +372,78 @@ import { FromCoercer, coercer } from ".";
 }
 //#endregion
 
+//#region Branded types
+{
+  const brand = Symbol();
+  type Branded<Type, Brand> = Type & { readonly [brand]: Brand };
+
+  //! It works with branded types
+  {
+    interface Things {
+      string: Branded<string, "hello">;
+      boolean: Branded<boolean, "cruel">;
+      number: Branded<number, "world">;
+    }
+
+    const coerceThings = coercer<Things>({
+      string: String,
+      boolean: Boolean,
+      number: Number,
+    });
+
+    const things = coerceThings(null);
+
+    //! It returns coerced data
+    things.string satisfies Branded<string, "hello">;
+    things.boolean satisfies Branded<boolean, "cruel">;
+    things.number satisfies Branded<number, "world">;
+  }
+
+  // Custom coercers might be used with branded types
+  {
+    function HelloString(value: unknown): Branded<string, "hello"> {
+      return value as Branded<string, "hello">;
+    }
+
+    function WorldString(value: unknown): Branded<string, "world"> {
+      return value as Branded<string, "world">;
+    }
+
+    function WorldNumber(value: unknown): Branded<number, "world"> {
+      return value as Branded<number, "world">;
+    }
+
+    interface Things {
+      string: Branded<string, "hello">;
+      boolean: Branded<boolean, "cruel">;
+      number: Branded<number, "world">;
+    }
+
+    coercer<Things>({
+      string: HelloString,
+      boolean: Boolean,
+      number: WorldNumber,
+    });
+
+    interface OtherThings {
+      hello: Branded<string, "hello">;
+      world: Branded<string, "world">;
+    }
+
+    coercer<OtherThings>({
+      hello: HelloString,
+      world: WorldString,
+    });
+
+    coercer<OtherThings>({
+      hello: HelloString,
+      // @ts-expect-error
+      world: HelloString,
+    });
+  }
+}
+//#endregion
+
 //#region Docs
 {
   const data = null as unknown;
