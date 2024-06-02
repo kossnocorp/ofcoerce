@@ -1,5 +1,5 @@
 import { type OfCoerce } from "./types.js";
-export type { OfCoerce as TinyParse };
+export type { OfCoerce };
 
 export const coercer: OfCoerce.Factory.Factory;
 
