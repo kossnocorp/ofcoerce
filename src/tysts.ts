@@ -226,7 +226,7 @@ import { FromCoercer, coercer } from ".";
   {
     const coerceWebhook = coercer<Webhook>(($) => ({
       name: String,
-      status: $.Union("active" as const, "inactive" as const, null),
+      status: $.Union("active", "inactive", null),
     }));
 
     //! It returns coerced data
@@ -275,7 +275,6 @@ import { FromCoercer, coercer } from ".";
     const coerceUser = coercer<User>(($) => ({
       name: String,
       credentials: $.Union(
-        // @ts-expect-error: Object unions aren't suported right now
         // [TODo] Add support for object unions
         {
           email: String,
@@ -298,7 +297,6 @@ import { FromCoercer, coercer } from ".";
     const coerceUser = coercer.infer(($) => ({
       name: String,
       credentials: $.Union(
-        // @ts-expect-error: Object unions aren't suported right now
         // [TODo] Add support for object unions
         {
           email: String,
@@ -350,8 +348,8 @@ import { FromCoercer, coercer } from ".";
 
   {
     const coerceMixed = coercer.infer({
-      type: "hello" as const,
-      flag: true as const,
+      type: "hello",
+      flag: true,
       nope: null,
       nah: undefined,
     });
