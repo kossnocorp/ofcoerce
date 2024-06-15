@@ -226,7 +226,7 @@ import { FromCoercer, coercer } from ".";
   {
     const coerceWebhook = coercer<Webhook>(($) => ({
       name: String,
-      status: $.Union("active" as const, "inactive" as const, null),
+      status: $.Union("active", "inactive", null),
     }));
 
     //! It returns coerced data
@@ -237,19 +237,14 @@ import { FromCoercer, coercer } from ".";
     coercer<Webhook>(($) => ({
       name: String,
       // @ts-expect-error: "active" is missing
-      status: $.Union("inactive" as const, null),
+      status: $.Union("inactive", null),
     }));
 
     //! It prevents extra values
     // @ts-expect-error: "nope" is redundant
     coercer<Webhook>(($) => ({
       name: String,
-      status: $.Union(
-        "active" as const,
-        "inactive" as const,
-        "nope" as const,
-        null
-      ),
+      status: $.Union("active", "inactive", "nope", null),
     }));
   }
 
@@ -257,7 +252,7 @@ import { FromCoercer, coercer } from ".";
   {
     const coerceWebhooks = coercer.infer(($) => ({
       name: String,
-      status: $.Union("active" as const, "inactive" as const, null),
+      status: $.Union("active", "inactive", null),
     }));
 
     type WebhookSchema = FromCoercer<typeof coerceWebhooks>;
@@ -420,8 +415,8 @@ import { FromCoercer, coercer } from ".";
 
   {
     const coerceMixed = coercer.infer({
-      type: "hello" as const,
-      flag: true as const,
+      type: "hello",
+      flag: true,
       nope: null,
       nah: undefined,
     });
