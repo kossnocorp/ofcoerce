@@ -275,7 +275,6 @@ import { FromCoercer, coercer } from ".";
     const coerceUser = coercer<User>(($) => ({
       name: String,
       credentials: $.Union(
-        // @ts-expect-error: Object unions aren't suported right now
         // [TODo] Add support for object unions
         {
           email: String,
@@ -298,7 +297,6 @@ import { FromCoercer, coercer } from ".";
     const coerceUser = coercer.infer(($) => ({
       name: String,
       credentials: $.Union(
-        // @ts-expect-error: Object unions aren't suported right now
         // [TODo] Add support for object unions
         {
           email: String,

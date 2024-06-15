@@ -64,14 +64,19 @@ export namespace OfCoerce {
        * @param types Types to union.
        * @returns Union coercer.
        */
-      Union<Type extends any[]>(
+      Union<const Type extends ReadonlyArray<any>>(
         // Right now only literal unions are supported, as coersing object
         // unions is not a straightforward task.
-        ...types: true extends Utils.IsLiteral<Type[number]> ? Type : never
-      ): Union<Utils.UnionFromArray<Type>>;
+        ...types: Type
+      ): Union<Unionize<Type>[number]>;
     }
 
-    type Test1 = Utils.IsLiteral<any>;
+    type Unionize<members extends ReadonlyArray<unknown>> = { 
+      -readonly [idx in keyof members]: 
+      [members[idx]] extends [Core.Coercer<infer shape>]
+        ? shape
+        : members[idx]
+     }
 
     /**
      * Optional coercer type. Wraps the constructor to signal that the field is
@@ -167,7 +172,7 @@ export namespace OfCoerce {
        * @param schema Schema or schema builder.
        * @returns Coercer function.
        */
-      <Schema>(schema: Core.Builder<Schema> | Schema): Core.Coercer<
+      <const Schema>(schema: Core.Builder<Schema> | Schema): Core.Coercer<
         Mapper.FromSchema<Schema>
       >;
     }
@@ -220,14 +225,10 @@ export namespace OfCoerce {
         ? // Resolve union
           // First add the defined coercer (String, Number, etc.)
           | Core.Union<
-                Type extends SchemaPair<any, infer Coercer> ? Coercer : never
-              >
-            // Now add the custom coercer
-            | (Flag extends "root"
-                ? never
-                : Type extends SchemaPair<infer Type, any>
-                ? Core.Coercer<Type>
-                : never)
+              | Type extends SchemaPair<any, infer Coercer> ? Coercer : never
+              // Now add the custom coercer
+              | Type extends SchemaPair<infer Type, any> ? Core.Coercer<Type> : never
+            >
         : Type extends SchemaPair<infer Type, infer Coercer>
         ?
             | // I wrap it into the union at the end to make it chance to resolve to
@@ -367,7 +368,7 @@ export namespace OfCoerce {
      */
     export type Combine<Type> = {
       [Key in keyof Type]: Type[Key];
-    };
+    } & unknown;
 
     /**
      * Resolves true if the given type is a union.
@@ -384,6 +385,8 @@ export namespace OfCoerce {
           ) extends false
         ? false
         : true;
+
+    export type LiteralValue = string | number | boolean | null
 
     /**
      * Resolves true if the given type is a literal (i.e. true rather than boolean).
