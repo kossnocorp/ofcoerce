@@ -348,6 +348,6 @@ interface Post {
 function createPostCoercer() {
   return coercer<Post>(($) => ({
     text: String,
-    status: $.Union("draft" as const, "published" as const),
+    status: $.Union("draft", "published"),
   }));
 }
