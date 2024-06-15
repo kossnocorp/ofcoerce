@@ -68,7 +68,7 @@ export namespace OfCoerce {
         // Right now only literal unions are supported, as coersing object
         // unions is not a straightforward task.
         ...types: Type
-      ): Union<Unionize<Type>[number]>;
+      ): Union<Unionize<Type>>;
     }
 
     type Unionize<members extends ReadonlyArray<unknown>> = { 
@@ -110,7 +110,7 @@ export namespace OfCoerce {
      * Union coercer type. Wraps the constructor to signal that the field is
      * a union.
      */
-    export interface Union<Type> {
+    export interface Union<Type extends ReadonlyArray<any>> {
       /** Assigned type. */
       [UnionSymbol]: Type;
     }
@@ -185,6 +185,7 @@ export namespace OfCoerce {
    * types and vice versa.
    */
   export namespace Mapper {
+    type To<A> = (a: unknown) => A
     /**
      * Resolves coerce schema from type shape.
      */
@@ -194,11 +195,11 @@ export namespace OfCoerce {
       > // Literal
         ? SchemaPair<Shape>
         : Utils.Debrand<Shape> extends boolean // Boolean
-        ? SchemaPair<Shape, BooleanConstructor>
+        ? SchemaPair<Shape, BooleanConstructor | To<Shape>>
         : Utils.Debrand<Shape> extends string // String
-        ? SchemaPair<Shape, StringConstructor>
+        ? SchemaPair<Shape, StringConstructor | To<Shape>>
         : Utils.Debrand<Shape> extends number // Number
-        ? SchemaPair<Shape, NumberConstructor>
+        ? SchemaPair<Shape, NumberConstructor | To<Shape>>
         : Shape extends Array<infer Item> // Array
         ? SchemaPair<Shape, Core.Array<ToSchema<Item>>>
         : Shape extends Record<any, any> // Object
@@ -224,18 +225,13 @@ export namespace OfCoerce {
         true extends Utils.IsUnion<Type>
         ? // Resolve union
           // First add the defined coercer (String, Number, etc.)
-          | Core.Union<
-              | Type extends SchemaPair<any, infer Coercer> ? Coercer : never
-              // Now add the custom coercer
-              | Type extends SchemaPair<infer Type, any> ? Core.Coercer<Type> : never
-            >
+          | Core.Union<(Type extends SchemaPair<infer Type, infer Coercer> ? Coercer extends never ? Core.Coercer<Type> : Coercer :  never)[]>
         : Type extends SchemaPair<infer Type, infer Coercer>
         ?
             | // I wrap it into the union at the end to make it chance to resolve to
             // the final type to avoid false positive on the union check.
-            (true extends Utils.IsUnion<Type> ? Core.Union<Coercer> : Coercer)
+            (true extends Utils.IsUnion<Type> ? Core.Union<Coercer[]> : Coercer)
             // Add custom coercer
-            | (Flag extends "root" ? never : Core.Coercer<Type>)
         : never
       : never;
 
@@ -250,7 +246,7 @@ export namespace OfCoerce {
      * Resolves type shape from coerce schema.
      */
     export type FromSchema<Schema> = Schema extends Core.Union<infer Type> // Union
-      ? FromSchema<Type>
+      ? FromSchema<Type[number]>
       : true extends Utils.IsLiteral<Schema> // Literal
       ? Schema
       : Schema extends BooleanConstructor // Boolean
@@ -261,8 +257,6 @@ export namespace OfCoerce {
       ? string
       : Schema extends Core.Array<infer Item> // Array
       ? FromSchema<Item>[]
-      : Schema extends Core.Union<infer Type> // Union
-      ? FromSchema<Type>
       : Schema extends Core.Coercer<infer Type> // Coercer
       ? Type
       : Schema extends Record<any, any> // Object
@@ -386,7 +380,7 @@ export namespace OfCoerce {
         ? false
         : true;
 
-    export type LiteralValue = string | number | boolean | null
+    export type Primitive = string | number | boolean | null | undefined
 
     /**
      * Resolves true if the given type is a literal (i.e. true rather than boolean).
