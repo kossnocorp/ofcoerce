@@ -232,6 +232,25 @@ import { FromCoercer, coercer } from ".";
     //! It returns coerced data
     const webhook = coerceWebhook(null);
     webhook.status satisfies Status;
+
+    //! It forces to specify all possible values
+    coercer<Webhook>(($) => ({
+      name: String,
+      // @ts-expect-error: "active" is missing
+      status: $.Union("inactive" as const, null),
+    }));
+
+    //! It prevents extra values
+    // @ts-expect-error: "nope" is redundant
+    coercer<Webhook>(($) => ({
+      name: String,
+      status: $.Union(
+        "active" as const,
+        "inactive" as const,
+        "nope" as const,
+        null
+      ),
+    }));
   }
 
   //! It allows to infer schema
@@ -252,7 +271,58 @@ import { FromCoercer, coercer } from ".";
 }
 //#endregion
 
-//#region Unions
+//#region Primitive unions
+{
+  interface Document {
+    title: string;
+    id: string | boolean;
+  }
+
+  //! It allows to specify a shape with an union
+  {
+    const coerceWebhook = coercer<Document>(($) => ({
+      title: String,
+      id: $.Union(String, Boolean),
+    }));
+
+    //! It returns coerced data
+    const webhook = coerceWebhook(null);
+    webhook.id satisfies string | number | boolean;
+
+    //! It forces to specify all possible values
+    coercer<Document>(($) => ({
+      title: String,
+      // @ts-expect-error: Boolean is missing
+      id: $.Union(String),
+    }));
+
+    //! It prevents extra values
+    // @ts-expect-error: Number is redundant
+    coercer<Webhook>(($) => ({
+      name: String,
+      status: $.Union(String, Boolean, Number),
+    }));
+  }
+
+  //! It allows to infer schema
+  {
+    const coerceWebhooks = coercer.infer(($) => ({
+      title: String,
+      id: $.Union(String, Number, Boolean),
+    }));
+
+    type DocumentSchema = FromCoercer<typeof coerceWebhooks>;
+    type _a = Assert<Document, DocumentSchema>;
+    type _b = Assert<DocumentSchema, Document>;
+
+    //! It returns coerced data
+    const webhook = coerceWebhooks(null);
+    webhook.id satisfies string | number | boolean;
+  }
+}
+//#endregion
+
+//#region Object unions
 {
   type Credentials = EmailCredentials | PhoneCredentials;
 
@@ -276,7 +346,7 @@ import { FromCoercer, coercer } from ".";
       name: String,
       credentials: $.Union(
         // @ts-expect-error: Object unions aren't suported right now
-        // [TODo] Add support for object unions
+        // [TODO] Add support for object unions
         {
           email: String,
           password: String,
@@ -299,7 +369,7 @@ import { FromCoercer, coercer } from ".";
       name: String,
       credentials: $.Union(
         // @ts-expect-error: Object unions aren't suported right now
-        // [TODo] Add support for object unions
+        // [TODO] Add support for object unions
         {
           email: String,
           password: String,
