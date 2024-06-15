@@ -193,6 +193,29 @@ describe("ofcoerce", () => {
     });
   });
 
+  describe("unions", () => {
+    it("keeps union literals as is", () => {
+      const coerce = createPostCoercer();
+      const result = coerce({ status: "published" });
+      expect(result).toEqual({
+        text: "",
+        status: "published",
+      });
+    });
+
+    it("sets the first literal if it's incorrect or missing", () => {
+      const coerce = createPostCoercer();
+      expect(coerce({ status: "nope" })).toEqual({
+        text: "",
+        status: "draft",
+      });
+      expect(coerce(null)).toEqual({
+        text: "",
+        status: "draft",
+      });
+    });
+  });
+
   describe("custom coercers", () => {
     it("allows to pass custom coercers", () => {
       interface SignInForm {
@@ -314,5 +337,17 @@ function createSongCoercer() {
       author: $.Optional(String),
       lines: $.Array(String),
     },
+  }));
+}
+
+interface Post {
+  text: string;
+  status: "draft" | "published";
+}
+
+function createPostCoercer() {
+  return coercer<Post>(($) => ({
+    text: String,
+    status: $.Union("draft" as const, "published" as const),
   }));
 }

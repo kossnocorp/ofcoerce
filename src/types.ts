@@ -64,11 +64,14 @@ export namespace OfCoerce {
        * @param types Types to union.
        * @returns Union coercer.
        */
-      // [TODO] Uncomment for the next version
-      // Union<Type extends any[]>(
-      //   ...types: Type
-      // ): Union<Utils.UnionFromArray<Type>>;
+      Union<Type extends any[]>(
+        // Right now only literal unions are supported, as coersing object
+        // unions is not a straightforward task.
+        ...types: true extends Utils.IsLiteral<Type[number]> ? Type : never
+      ): Union<Utils.UnionFromArray<Type>>;
     }
+
+    type Test1 = Utils.IsLiteral<any>;
 
     /**
      * Optional coercer type. Wraps the constructor to signal that the field is
@@ -210,8 +213,9 @@ export namespace OfCoerce {
           >
         : never
     ) extends infer Type
-      ? // I wrap it into the union at the end to make it chance to resolve to
-        // the final type to avoid false positive on the union check.
+      ? // Unions come in two flavors: one is union of SchemaPairs and the other
+        // there ths SchemaPair's type (first element) is a union. So we need to
+        // treat them separately.
         true extends Utils.IsUnion<Type>
         ? // Resolve union
           // First add the defined coercer (String, Number, etc.)
@@ -224,9 +228,13 @@ export namespace OfCoerce {
                 : Type extends SchemaPair<infer Type, any>
                 ? Core.Coercer<Type>
                 : never)
-        : // Resolve single type
-        Type extends SchemaPair<infer Type, infer Coercer>
-        ? Coercer | (Flag extends "root" ? never : Core.Coercer<Type>)
+        : Type extends SchemaPair<infer Type, infer Coercer>
+        ?
+            | // I wrap it into the union at the end to make it chance to resolve to
+            // the final type to avoid false positive on the union check.
+            (true extends Utils.IsUnion<Type> ? Core.Union<Coercer> : Coercer)
+            // Add custom coercer
+            | (Flag extends "root" ? never : Core.Coercer<Type>)
         : never
       : never;
 
@@ -364,15 +372,18 @@ export namespace OfCoerce {
     /**
      * Resolves true if the given type is a union.
      */
-    export type IsUnion<Type, Copy extends Type = Type> = boolean extends Type
-      ? Exclude<Type, boolean> extends never
+    export type IsUnion<Type, Copy extends Type = Type> =
+      // Booleans are technically unions, but we don't want to treat them as such.
+      // Debranding first helps to avoid false positives.
+      boolean extends Debrand<Type>
+        ? Exclude<Debrand<Type>, boolean> extends never
+          ? false
+          : true
+        : (
+            Type extends any ? (Copy extends Type ? false : true) : never
+          ) extends false
         ? false
-        : true
-      : (
-          Type extends any ? (Copy extends Type ? false : true) : never
-        ) extends false
-      ? false
-      : true;
+        : true;
 
     /**
      * Resolves true if the given type is a literal (i.e. true rather than boolean).

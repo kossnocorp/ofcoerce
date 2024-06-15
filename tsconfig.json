@@ -8,9 +8,9 @@
     "strict": true,
     "exactOptionalPropertyTypes": true,
     "noUncheckedIndexedAccess": true,
-    "allowJs": true
+    "allowJs": true,
     // [NOTE]: Enable only when debugging as it slows down the compilation
-    // "noErrorTruncation": true
+    "noErrorTruncation": true
   },
   "exclude": []
 }

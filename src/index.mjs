@@ -1,5 +1,5 @@
 const memoized = [new Map(), new Map()];
-const symbols = [Symbol(), Symbol()];
+const symbols = [Symbol(), Symbol(), Symbol()];
 
 function Type(index, type) {
   // Reuse the same object to avoid trashing the heap
@@ -11,6 +11,7 @@ function Type(index, type) {
 const helpers = {
   Optional: Type.bind(null, 0),
   Array: Type.bind(null, 1),
+  Union: (...types) => ({ [symbols[2]]: types }),
 };
 
 export function coercer(schema) {
@@ -35,6 +36,13 @@ export function coercer(schema) {
       return (
         (value && value?.map((item) => coerce(item, coercer[symbols[1]]))) || []
       );
+
+    // The coercer is an union, so we iterate over each type until we find
+    // a match or use the first type as the default.
+    if (symbols[2] in coercer) {
+      const types = coercer[symbols[2]];
+      return types.find((t) => t === value) || types[0];
+    }
 
     // The coercer is an object and each key must be coerced individually.
 

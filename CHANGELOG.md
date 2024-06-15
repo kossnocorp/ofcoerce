@@ -8,6 +8,12 @@ This change log follows the format documented in [Keep a CHANGELOG].
 [semantic versioning]: http://semver.org/
 [keep a changelog]: http://keepachangelog.com/
 
+## v0.7.0 - 2024-06-15
+
+### Added
+
+- Added literal unions support via `$.Union("draft", "published")` helper.
+
 ## v0.6.0 - 2024-06-02
 
 ### Added

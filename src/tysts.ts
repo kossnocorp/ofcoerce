@@ -213,6 +213,45 @@ import { FromCoercer, coercer } from ".";
 }
 //#endregion
 
+//#region Literal unions
+{
+  type Status = "active" | "inactive" | null;
+
+  interface Webhook {
+    name: string;
+    status: Status;
+  }
+
+  //! It allows to specify a shape with an union
+  {
+    const coerceWebhook = coercer<Webhook>(($) => ({
+      name: String,
+      status: $.Union("active" as const, "inactive" as const, null),
+    }));
+
+    //! It returns coerced data
+    const webhook = coerceWebhook(null);
+    webhook.status satisfies Status;
+  }
+
+  //! It allows to infer schema
+  {
+    const coerceWebhooks = coercer.infer(($) => ({
+      name: String,
+      status: $.Union("active" as const, "inactive" as const, null),
+    }));
+
+    type WebhookSchema = FromCoercer<typeof coerceWebhooks>;
+    type _a = Assert<Webhook, WebhookSchema>;
+    type _b = Assert<WebhookSchema, Webhook>;
+
+    //! It returns coerced data
+    const webhook = coerceWebhooks(null);
+    webhook.status satisfies Status;
+  }
+}
+//#endregion
+
 //#region Unions
 {
   type Credentials = EmailCredentials | PhoneCredentials;
@@ -236,6 +275,8 @@ import { FromCoercer, coercer } from ".";
     const coerceUser = coercer<User>(($) => ({
       name: String,
       credentials: $.Union(
+        // @ts-expect-error: Object unions aren't suported right now
+        // [TODo] Add support for object unions
         {
           email: String,
           password: String,
@@ -257,6 +298,8 @@ import { FromCoercer, coercer } from ".";
     const coerceUser = coercer.infer(($) => ({
       name: String,
       credentials: $.Union(
+        // @ts-expect-error: Object unions aren't suported right now
+        // [TODo] Add support for object unions
         {
           email: String,
           password: String,
