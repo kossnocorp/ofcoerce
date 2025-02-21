@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { coercer } from ".";
 
 describe("ofcoerce", () => {
@@ -267,6 +267,14 @@ describe("ofcoerce", () => {
         email: "koss@nocorp.me",
       });
     });
+
+    it("supports File", async () => {
+      const coerce = createUploadCoercer();
+      const file = new File(["Hello, world!"], "filename");
+      const result = coerce({ name: "hello.txt", file });
+      expect(result.name).toBe("hello.txt");
+      expect(await result.file.text()).toBe("Hello, world!");
+    });
   });
 });
 
@@ -349,5 +357,17 @@ function createPostCoercer() {
   return coercer<Post>(($) => ({
     text: String,
     status: $.Union("draft" as const, "published" as const),
+  }));
+}
+
+interface Upload {
+  name: string;
+  file: File;
+}
+
+function createUploadCoercer() {
+  return coercer<Upload>(($) => ({
+    name: String,
+    file: File,
   }));
 }

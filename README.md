@@ -4,7 +4,7 @@ Of Coerce! is a lightweight, near-zero overhead alternative to [Zod](https://zod
 
 Unlike these libraries, Of Coerce! focuses on a single task: ensuring the data corresponds to the types.
 
-It uses built-in JavaScript features to coerce whatever you pass to it, which makes it the fastest and the most lightweight solution (full library is `362B`!).
+It uses built-in JavaScript features to coerce whatever you pass to it, which makes it the fastest and the most lightweight solution (full library is `381B`!).
 
 ```ts
 import { coercer } from "ofcoerce";
@@ -68,6 +68,33 @@ function SignInForm() {
   );
 }
 ```
+
+You can also use constructors as coercers, that is useful for example when working with `File`:
+
+```tsx
+import { coercer } from "ofcoerce";
+
+const coerceFile = coercer({
+  file: File,
+});
+
+function UploadForm() {
+  return (
+    <form
+      action={async (formData) => {
+        "use server";
+        const form = coerceFile(formData);
+        await upload(form);
+      }}
+    >
+      <input name="file" type="file" required />
+      <button>Upload</button>
+    </form>
+  );
+}
+```
+
+It will check if the value is an instance of `File`, and if not, it will try to call `new File()` without parameters.
 
 ## Getting started
 

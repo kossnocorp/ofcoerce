@@ -36,6 +36,21 @@ export namespace OfCoerce {
     }
 
     /**
+     * Coercer class. It allows to use `instanceof` to check if the data is
+     * of the expected shape.
+     */
+    export interface CoercerClass<Shape> {
+      /**
+       * Constructor function.
+       *
+       * @param args Any arguments
+       *
+       * @returns Data instance.
+       */
+      new (...args: any[]): Shape;
+    }
+
+    /**
      * Methods helping to build the coercer schema.
      */
     export interface BuilderHelpers {
@@ -235,6 +250,8 @@ export namespace OfCoerce {
             (true extends Utils.IsUnion<Type> ? Core.Union<Coercer> : Coercer)
             // Add custom coercer
             | (Flag extends "root" ? never : Core.Coercer<Type>)
+            // Add class coercer
+            | (Flag extends "root" ? never : Core.CoercerClass<Type>)
         : never
       : never;
 
@@ -258,6 +275,8 @@ export namespace OfCoerce {
       ? number
       : Schema extends StringConstructor // String
       ? string
+      : Schema extends ConstructorLike<infer Type> // Class
+      ? Type
       : Schema extends Core.Array<infer Item> // Array
       ? FromSchema<Item>[]
       : Schema extends Core.Union<infer Type> // Union
@@ -273,6 +292,13 @@ export namespace OfCoerce {
           }
         >
       : never;
+
+    /**
+     * Constructor-like type. It allows to infer the type from the constructor.
+     */
+    export interface ConstructorLike<Type> {
+      new (...args: any[]): Type;
+    }
 
     /**
      * Resolves the type of the field from the schema.

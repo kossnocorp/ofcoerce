@@ -415,6 +415,43 @@ import { FromCoercer, coercer } from ".";
 }
 //#endregion
 
+//#region Class coercers
+{
+  interface UploadForm {
+    name: string;
+    file: File;
+  }
+
+  //! It allows to use class coercers
+  {
+    const coerceForm = coercer<UploadForm>({
+      name: String,
+      file: File,
+    });
+
+    //! It returns coerced data
+    const form = coerceForm(null);
+    form.file satisfies File;
+  }
+
+  //! It allows to infer schema
+  {
+    const coerceForm = coercer.infer({
+      name: String,
+      file: File,
+    });
+
+    type FormSchema = FromCoercer<typeof coerceForm>;
+    type _a = Assert<UploadForm, FormSchema>;
+    type _b = Assert<FormSchema, UploadForm>;
+
+    //! It returns coerced data
+    const form = coerceForm(null);
+    form.file satisfies File;
+  }
+}
+//#endregion
+
 //#region Branded types
 {
   const brand = Symbol();

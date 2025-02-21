@@ -8,6 +8,12 @@ This change log follows the format documented in [Keep a CHANGELOG].
 [semantic versioning]: http://semver.org/
 [keep a changelog]: http://keepachangelog.com/
 
+## v0.8.0 - 2025-02-21
+
+### Added
+
+- Added support for class coercers, i.e., `File`. Unlike function coercers, which use the function itself to coerce, class coercer relies on `instanceof` to check the type. It `instanceof` returns `false`, but it falls back to calling the `new` without parameters.
+
 ## v0.7.0 - 2024-06-15
 
 ### Added

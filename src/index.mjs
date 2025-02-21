@@ -25,8 +25,23 @@ export function coercer(schema) {
     // // We can't use the default value as it will override undefined
     if (arguments.length === 1) coercer = schema;
 
-    // The coercer is a function (Boolean, Number, String, etc.), so we can it.
-    if (typeof coercer === "function") return coercer(value);
+    // The coercer is a function (Boolean, Number, String, etc.), so we can
+    // try running it on the value.
+    if (typeof coercer === "function") {
+      try {
+        return coercer(value);
+      } catch {
+        // If it fails, then it is likely a class constructor, so we try
+        // handling it as a class constructor.
+        //
+        // Possible error might look like this:
+        //   Uncaught TypeError: Class constructor File cannot be invoked without 'new'
+
+        // If the value is an instance of the coercer, then we return it
+        // otherwise we create a new instance of the coercer.
+        return value instanceof coercer ? value : new coercer();
+      }
+    }
 
     // Return primitives early to avoid unnecessary checks
     if (!coercer || typeof coercer !== "object") return coercer;
