@@ -1,3 +1,6 @@
+> [!WARNING]
+> Of Coerce! is now part of [js-fns](https://github.com/kossnocorp/js-fns) and published as [@js-fns/coerce](https://www.npmjs.com/package/@js-fns/coerce). Migrate to it for future updates.
+
 # Of Coerce!
 
 Of Coerce! is a lightweight, near-zero overhead alternative to [Zod](https://zod.dev/) and [Valibot](https://valibot.dev/).

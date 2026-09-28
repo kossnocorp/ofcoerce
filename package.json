@@ -1,7 +1,20 @@
 {
   "name": "ofcoerce",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Lightweight type coercion library",
+  "keywords": [
+    "state"
+  ],
+  "homepage": "https://github.com/kossnocorp/ofcoerce#readme",
+  "bugs": {
+    "url": "https://github.com/kossnocorp/ofcoerce/issues"
+  },
+  "license": "MIT",
+  "author": "Sasha Koss <koss@nocorp.me>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kossnocorp/ofcoerce.git"
+  },
   "main": "index.js",
   "module": "index.mjs",
   "exports": {
@@ -17,19 +30,6 @@
       }
     }
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/kossnocorp/ofcoerce.git"
-  },
-  "keywords": [
-    "state"
-  ],
-  "author": "Sasha Koss <koss@nocorp.me>",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/kossnocorp/ofcoerce/issues"
-  },
-  "homepage": "https://github.com/kossnocorp/ofcoerce#readme",
   "devDependencies": {
     "@babel/cli": "^7.24.6",
     "@babel/core": "^7.24.6",
